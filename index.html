@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Notes App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a6fd8;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --danger: #ff6b6b;
+            --success: #51cf66;
+            --warning: #ffd93d;
+            --info: #74c0fc;
+            
+            /* Light theme */
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.15);
+            
+            --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+            --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --shadow-heavy: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+            min-height: 100vh;
+            transition: all var(--transition-normal);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            animation: slideDown 0.6s ease-out;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .theme-toggle {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all var(--transition-normal);
+            color: var(--text-primary);
+            font-weight: 500;
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left var(--transition-normal);
+        }
+
+        .theme-toggle:hover::before {
+            left: 100%;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+            border-color: var(--primary);
+        }
+
+        /* Filter Dropdown - UPDATED */
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+            animation: slideUp 0.6s ease-out 0.2s both;
+            position: relative;
+            z-index: 10;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            padding: 12px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all var(--transition-normal);
+            color: var(--text-primary);
+            font-weight: 500;
+            box-shadow: var(--shadow-light);
+            min-width: 150px;
+            justify-content: space-between;
+        }
+
+        .dropdown-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+            border-color: var(--primary);
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-heavy);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all var(--transition-normal);
+            margin-top: 8px;
+        }
+
+        .dropdown.active .dropdown-content {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            display: block;
+            padding: 12px 20px;
+            color: var(--text-primary);
+            text-decoration: none;
+            transition: all var(--transition-fast);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-tertiary);
+            padding-left: 25px;
+        }
+
+        .dropdown-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: var(--border-color);
+            margin: 8px 0;
+        }
+
+        /* Search Box */
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px 12px 50px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all var(--transition-normal);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        /* Note Form - UPDATED */
+        .note-form {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow-medium);
+            border: 1px solid var(--border-color);
+            animation: slideUp 0.6s ease-out 0.4s both;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .note-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+        }
+
+        .form-title {
+            margin-bottom: 25px;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all var(--transition-normal);
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .checkbox-custom {
+            position: relative;
+            width: 20px;
+            height: 20px;
+        }
+
+        .checkbox-custom input {
+            opacity: 0;
+            position: absolute;
+        }
+
+        .checkbox-custom .checkmark {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 20px;
+            width: 20px;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            transition: all var(--transition-normal);
+        }
+
+        .checkbox-custom input:checked ~ .checkmark {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-color: var(--primary);
+        }
+
+        .checkbox-custom .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .checkbox-custom input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .checkbox-custom .checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all var(--transition-normal);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left var(--transition-normal);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #ff5252);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, var(--info), #339af0);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #fcc419);
+            color: var(--text-primary);
+        }
+
+        /* Notes Grid */
+        .notes-container {
+            animation: slideUp 0.6s ease-out 0.6s both;
+        }
+
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .notes-count {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .note-card {
+            background: var(--bg-secondary);
+            border-radius: var(--border-radius-lg);
+            padding: 25px;
+            box-shadow: var(--shadow-light);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+            animation: noteSlideIn 0.5s ease-out;
+        }
+
+        .note-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform var(--transition-normal);
+        }
+
+        .note-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .note-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .note-card.pinned {
+            border-left: 4px solid var(--warning);
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 217, 61, 0.05));
+        }
+
+        /* Color Marking Styles */
+        .note-card.red {
+            border-left: 6px solid #ff6b6b;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 107, 107, 0.05));
+        }
+
+        .note-card.yellow {
+            border-left: 6px solid #ffd93d;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(255, 217, 61, 0.05));
+        }
+
+        .note-card.green {
+            border-left: 6px solid #51cf66;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(81, 207, 102, 0.05));
+        }
+
+        .note-card.blue {
+            border-left: 6px solid #74c0fc;
+            background: linear-gradient(135deg, var(--bg-secondary), rgba(116, 192, 252, 0.05));
+        }
+
+        /* Color Selector Styles */
+        .color-selector {
+            margin-bottom: 20px;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all var(--transition-fast);
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        .color-option.none {
+            background: var(--bg-primary);
+            position: relative;
+        }
+
+        .color-option.none::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--danger);
+            transform: rotate(45deg);
+        }
+
+        .color-option.red {
+            background: #ff6b6b;
+        }
+
+        .color-option.yellow {
+            background: #ffd93d;
+        }
+
+        .color-option.green {
+            background: #51cf66;
+        }
+
+        .color-option.blue {
+            background: #74c0fc;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .note-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            line-height: 1.3;
+        }
+
+        .pin-indicator {
+            color: var(--warning);
+            font-size: 1.2rem;
+            animation: bounce 2s infinite;
+        }
+
+        .note-content {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.6;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Footer */
+        .app-footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            margin-top: 40px;
+            background: var(--bg-tertiary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes noteSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-5px);
+            }
+            60% {
+                transform: translateY(-3px);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .note-form {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+            
+            .note-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-sticky-note"></i>
+                </div>
+                <h1>NoteScribe</h1>
+            </div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+                <span>Dark Mode</span>
+            </button>
+        </header>
+
+        <div class="controls">
+            <div class="dropdown" id="filterDropdown">
+                <button class="dropdown-btn" id="dropdownBtn">
+                    <span id="currentFilter">All Notes</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="dropdown-content">
+                    <a href="#" class="dropdown-item active" data-filter="all">
+                        <i class="fas fa-sticky-note"></i> All Notes
+                    </a>
+                    <a href="#" class="dropdown-item" data-filter="pinned">
+                        <i class="fas fa-thumbtack"></i> Pinned Notes
+                    </a>
+                    <a href="#" class="dropdown-item" data-filter="recent">
+                        <i class="fas fa-clock"></i> Recent Notes
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" data-filter="color-red">
+                        <i class="fas fa-circle" style="color: #ff6b6b"></i>Priority
+                    </a>
+                    <a href="#" class="dropdown-item" data-filter="color-yellow">
+                        <i class="fas fa-circle" style="color: #ffd93d"></i> Ideas
+                    </a>
+                    <a href="#" class="dropdown-item" data-filter="color-green">
+                        <i class="fas fa-circle" style="color: #51cf66"></i> Vision
+                    </a>
+                    <a href="#" class="dropdown-item" data-filter="color-blue">
+                        <i class="fas fa-circle" style="color: #74c0fc"></i> Resources
+                    </a>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search notes...">
+            </div>
+        </div>
+
+        <div class="note-form">
+            <h2 class="form-title">Create New Note</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="noteTitle">Title</label>
+                    <input type="text" id="noteTitle" class="form-control" placeholder="Enter note title..." required>
+                </div>
+                <div class="form-group">
+                    <label for="noteCategory">Category</label>
+                    <input type="text" id="noteCategory" class="form-control" placeholder="e.g., Work, Personal...">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="noteContent">Content</label>
+                <textarea id="noteContent" class="form-control" placeholder="Write your note here..." required></textarea>
+            </div>
+            <div class="form-group color-selector">
+                <label>Color Marking</label>
+                <div class="color-options">
+                    <div class="color-option none selected" data-color=""></div>
+                    <div class="color-option red" data-color="red"></div>
+                    <div class="color-option yellow" data-color="yellow"></div>
+                    <div class="color-option green" data-color="green"></div>
+                    <div class="color-option blue" data-color="blue"></div>
+                </div>
+                <input type="hidden" id="noteColor" value="">
+            </div>
+            <div class="checkbox-group">
+                <div class="checkbox-custom">
+                    <input type="checkbox" id="notePinned">
+                    <span class="checkmark"></span>
+                </div>
+                <label for="notePinned">Pin this note</label>
+            </div>
+            <button id="addNoteBtn" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                <span>Add Note</span>
+            </button>
+        </div>
+
+        <div class="notes-container">
+            <div class="notes-header">
+                <h3>Your Notes</h3>
+                <span class="notes-count" id="notesCount">0 notes</span>
+            </div>
+            <div class="notes-grid" id="notesGrid">
+                <!-- Notes will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="app-footer">
+        <p>© 2025 All Rights Reserved | Designed and Developed by Ganesh Reddy</p>
+    </footer>
+
+    <script>
+        class NotesApp {
+            constructor() {
+                this.notes = JSON.parse(localStorage.getItem('notes')) || [];
+                this.currentFilter = 'all';
+                this.searchQuery = '';
+                this.isEditing = false;
+                this.editingId = null;
+                
+                this.initializeElements();
+                this.setupEventListeners();
+                this.loadTheme();
+                this.renderNotes();
+                this.updateNotesCount();
+            }
+
+            initializeElements() {
+                this.elements = {
+                    notesGrid: document.getElementById('notesGrid'),
+                    addNoteBtn: document.getElementById('addNoteBtn'),
+                    noteTitle: document.getElementById('noteTitle'),
+                    noteContent: document.getElementById('noteContent'),
+                    noteCategory: document.getElementById('noteCategory'),
+                    notePinned: document.getElementById('notePinned'),
+                    noteColor: document.getElementById('noteColor'),
+                    themeToggle: document.getElementById('themeToggle'),
+                    filterDropdown: document.getElementById('filterDropdown'),
+                    dropdownBtn: document.getElementById('dropdownBtn'),
+                    currentFilter: document.getElementById('currentFilter'),
+                    searchInput: document.getElementById('searchInput'),
+                    notesCount: document.getElementById('notesCount')
+                };
+
+                // Initialize color options
+                this.colorOptions = document.querySelectorAll('.color-option');
+            }
+
+            setupEventListeners() {
+                // Add note button
+                this.elements.addNoteBtn.addEventListener('click', () => this.handleAddNote());
+                
+                // Theme toggle
+                this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
+                
+                // Dropdown functionality
+                this.elements.dropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.elements.filterDropdown.classList.toggle('active');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', () => {
+                    this.elements.filterDropdown.classList.remove('active');
+                });
+                
+                // Filter items
+                const filterItems = document.querySelectorAll('.dropdown-item');
+                filterItems.forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.handleFilterChange(item);
+                    });
+                });
+                
+                // Search functionality
+                this.elements.searchInput.addEventListener('input', (e) => {
+                    this.searchQuery = e.target.value.toLowerCase();
+                    this.renderNotes();
+                });
+                
+                // Form submission on Enter (Ctrl+Enter for textarea)
+                this.elements.noteTitle.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.elements.noteContent.focus();
+                    }
+                });
+                
+                this.elements.noteContent.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        this.handleAddNote();
+                    }
+                });
+
+                // Color selection
+                this.colorOptions.forEach(option => {
+                    option.addEventListener('click', () => {
+                        this.colorOptions.forEach(opt => opt.classList.remove('selected'));
+                        option.classList.add('selected');
+                        this.elements.noteColor.value = option.dataset.color;
+                    });
+                });
+            }
+
+            handleAddNote() {
+                const title = this.elements.noteTitle.value.trim();
+                const content = this.elements.noteContent.value.trim();
+                const category = this.elements.noteCategory.value.trim();
+                const pinned = this.elements.notePinned.checked;
+                const color = this.elements.noteColor.value;
+                
+                if (!title || !content) {
+                    this.showToast('Please enter both title and content', 'error');
+                    return;
+                }
+                
+                if (this.isEditing) {
+                    this.updateNote(this.editingId, { title, content, category, pinned, color });
+                } else {
+                    this.addNote({ title, content, category, pinned, color });
+                }
+            }
+
+            addNote({ title, content, category, pinned, color }) {
+                const newNote = {
+                    id: Date.now(),
+                    title,
+                    content,
+                    category: category || 'General',
+                    pinned,
+                    color,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                this.notes.unshift(newNote);
+                this.saveNotes();
+                this.resetForm();
+                this.renderNotes();
+                this.updateNotesCount();
+                this.showToast('Note added successfully!', 'success');
+            }
+
+            updateNote(id, { title, content, category, pinned, color }) {
+                const noteIndex = this.notes.findIndex(note => note.id === id);
+                if (noteIndex !== -1) {
+                    this.notes[noteIndex] = {
+                        ...this.notes[noteIndex],
+                        title,
+                        content,
+                        category: category || 'General',
+                        pinned,
+                        color,
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    this.saveNotes();
+                    this.resetForm();
+                    this.renderNotes();
+                    this.showToast('Note updated successfully!', 'success');
+                }
+            }
+
+            editNote(id) {
+                const note = this.notes.find(note => note.id === id);
+                if (!note) return;
+                
+                this.elements.noteTitle.value = note.title;
+                this.elements.noteContent.value = note.content;
+                this.elements.noteCategory.value = note.category || '';
+                this.elements.notePinned.checked = note.pinned;
+                
+                // Set color
+                this.elements.noteColor.value = note.color || '';
+                this.colorOptions.forEach(opt => opt.classList.remove('selected'));
+                if (note.color) {
+                    document.querySelector(`.color-option[data-color="${note.color}"]`).classList.add('selected');
+                } else {
+                    document.querySelector('.color-option.none').classList.add('selected');
+                }
+                
+                this.isEditing = true;
+                this.editingId = id;
+                
+                // Update button text
+                this.elements.addNoteBtn.innerHTML = '<i class="fas fa-save"></i><span>Update Note</span>';
+                
+                // Scroll to form
+                document.querySelector('.note-form').scrollIntoView({ behavior: 'smooth' });
+                this.elements.noteTitle.focus();
+            }
+
+            deleteNote(id) {
+                if (confirm('Are you sure you want to delete this note?')) {
+                    this.notes = this.notes.filter(note => note.id !== id);
+                    this.saveNotes();
+                    this.renderNotes();
+                    this.updateNotesCount();
+                    this.showToast('Note deleted successfully!', 'success');
+                }
+            }
+
+            togglePin(id) {
+                const note = this.notes.find(note => note.id === id);
+                if (note) {
+                    note.pinned = !note.pinned;
+                    note.updatedAt = new Date().toISOString();
+                    this.saveNotes();
+                    this.renderNotes();
+                    this.showToast(`Note ${note.pinned ? 'pinned' : 'unpinned'}!`, 'info');
+                }
+            }
+
+            handleFilterChange(item) {
+                // Remove active class from all items
+                document.querySelectorAll('.dropdown-item').forEach(i => i.classList.remove('active'));
+                
+                // Add active class to clicked item
+                item.classList.add('active');
+                
+                // Update current filter
+                this.currentFilter = item.dataset.filter;
+                this.elements.currentFilter.textContent = item.textContent.trim();
+                
+                // Close dropdown
+                this.elements.filterDropdown.classList.remove('active');
+                
+                // Re-render notes
+                this.renderNotes();
+            }
+
+            getFilteredNotes() {
+                let filteredNotes = [...this.notes];
+                
+                // Apply filter
+                switch (this.currentFilter) {
+                    case 'pinned':
+                        filteredNotes = filteredNotes.filter(note => note.pinned);
+                        break;
+                    case 'recent':
+                        filteredNotes = filteredNotes.filter(note => {
+                            const noteDate = new Date(note.createdAt);
+                            const threeDaysAgo = new Date();
+                            threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+                            return noteDate > threeDaysAgo;
+                        });
+                        break;
+                    case 'color-red':
+                        filteredNotes = filteredNotes.filter(note => note.color === 'red');
+                        break;
+                    case 'color-yellow':
+                        filteredNotes = filteredNotes.filter(note => note.color === 'yellow');
+                        break;
+                    case 'color-green':
+                        filteredNotes = filteredNotes.filter(note => note.color === 'green');
+                        break;
+                    case 'color-blue':
+                        filteredNotes = filteredNotes.filter(note => note.color === 'blue');
+                        break;
+                }
+                
+                // Apply search
+                if (this.searchQuery) {
+                    filteredNotes = filteredNotes.filter(note =>
+                        note.title.toLowerCase().includes(this.searchQuery) ||
+                        note.content.toLowerCase().includes(this.searchQuery) ||
+                        (note.category && note.category.toLowerCase().includes(this.searchQuery))
+                    );
+                }
+                
+                // Sort: pinned first, then by updated date
+                return filteredNotes.sort((a, b) => {
+                    if (a.pinned && !b.pinned) return -1;
+                    if (!a.pinned && b.pinned) return 1;
+                    return new Date(b.updatedAt) - new Date(a.updatedAt);
+                });
+            }
+
+            renderNotes() {
+                const filteredNotes = this.getFilteredNotes();
+                
+                if (filteredNotes.length === 0) {
+                    this.renderEmptyState();
+                    return;
+                }
+                
+                this.elements.notesGrid.innerHTML = filteredNotes.map(note => this.createNoteCard(note)).join('');
+                
+                // Add event listeners to note actions
+                this.attachNoteEventListeners();
+            }
+
+            createNoteCard(note) {
+                const createdDate = new Date(note.createdAt).toLocaleDateString();
+                const updatedDate = new Date(note.updatedAt).toLocaleDateString();
+                const isRecent = createdDate !== updatedDate;
+                
+                return `
+                    <div class="note-card ${note.pinned ? 'pinned' : ''} ${note.color || ''}">
+                        <div class="note-header">
+                            <h3 class="note-title">${this.escapeHtml(note.title)}</h3>
+                            ${note.pinned ? '<i class="fas fa-thumbtack pin-indicator"></i>' : ''}
+                        </div>
+                        <div class="note-meta">
+                            <span class="note-category">
+                                <i class="fas fa-tag"></i> ${this.escapeHtml(note.category)}
+                            </span>
+                            <span class="note-date">
+                                ${isRecent ? `Updated: ${updatedDate}` : `Created: ${createdDate}`}
+                            </span>
+                        </div>
+                        <div class="note-content">${this.escapeHtml(note.content)}</div>
+                        <div class="note-actions">
+                            <button class="btn btn-sm btn-info" onclick="app.editNote(${note.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="app.togglePin(${note.id})">
+                                <i class="fas fa-thumbtack"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="app.deleteNote(${note.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderEmptyState() {
+                let message = 'No notes found';
+                let icon = 'fa-sticky-note';
+                
+                if (this.searchQuery) {
+                    message = `No notes found for "${this.searchQuery}"`;
+                    icon = 'fa-search';
+                } else if (this.currentFilter === 'pinned') {
+                    message = 'No pinned notes yet';
+                    icon = 'fa-thumbtack';
+                } else if (this.currentFilter === 'recent') {
+                    message = 'No recent notes';
+                    icon = 'fa-clock';
+                } else if (this.currentFilter.startsWith('color-')) {
+                    const color = this.currentFilter.split('-')[1];
+                    message = `No ${color} notes found`;
+                    icon = 'fa-palette';
+                }
+                
+                this.elements.notesGrid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas ${icon} empty-icon"></i>
+                        <h3>${message}</h3>
+                        <p>Start by creating your first note!</p>
+                    </div>
+                `;
+            }
+
+            attachNoteEventListeners() {
+                // Event listeners are handled through inline onclick for simplicity
+                // In a production app, you'd want to use event delegation
+            }
+
+            resetForm() {
+                this.elements.noteTitle.value = '';
+                this.elements.noteContent.value = '';
+                this.elements.noteCategory.value = '';
+                this.elements.notePinned.checked = false;
+                this.elements.noteColor.value = '';
+                
+                // Reset color selection
+                this.colorOptions.forEach(opt => opt.classList.remove('selected'));
+                document.querySelector('.color-option.none').classList.add('selected');
+                
+                this.isEditing = false;
+                this.editingId = null;
+                
+                // Reset button text
+                this.elements.addNoteBtn.innerHTML = '<i class="fas fa-plus"></i><span>Add Note</span>';
+            }
+
+            updateNotesCount() {
+                const count = this.notes.length;
+                this.elements.notesCount.textContent = `${count} ${count === 1 ? 'note' : 'notes'}`;
+            }
+
+            saveNotes() {
+                localStorage.setItem('notes', JSON.stringify(this.notes));
+            }
+
+            toggleTheme() {
+                const currentTheme = document.body.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                
+                document.body.setAttribute('data-theme', newTheme);
+                localStorage.setItem('theme', newTheme);
+                
+                // Update button text and icon
+                const icon = this.elements.themeToggle.querySelector('i');
+                const text = this.elements.themeToggle.querySelector('span');
+                
+                if (newTheme === 'dark') {
+                    icon.className = 'fas fa-sun';
+                    text.textContent = 'Light Mode';
+                } else {
+                    icon.className = 'fas fa-moon';
+                    text.textContent = 'Dark Mode';
+                }
+            }
+
+            loadTheme() {
+                const savedTheme = localStorage.getItem('theme') || 'light';
+                document.body.setAttribute('data-theme', savedTheme);
+                
+                const icon = this.elements.themeToggle.querySelector('i');
+                const text = this.elements.themeToggle.querySelector('span');
+                
+                if (savedTheme === 'dark') {
+                    icon.className = 'fas fa-sun';
+                    text.textContent = 'Light Mode';
+                } else {
+                    icon.className = 'fas fa-moon';
+                    text.textContent = 'Dark Mode';
+                }
+            }
+
+            showToast(message, type = 'info') {
+                // Simple toast implementation
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.textContent = message;
+                
+                Object.assign(toast.style, {
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    padding: '15px 20px',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontWeight: '500',
+                    zIndex: '10000',
+                    opacity: '0',
+                    transform: 'translateY(-20px)',
+                    transition: 'all 0.3s ease'
+                });
+                
+                // Set background color based on type
+                const colors = {
+                    success: '#51cf66',
+                    error: '#ff6b6b',
+                    info: '#74c0fc',
+                    warning: '#ffd93d'
+                };
+                
+                toast.style.backgroundColor = colors[type] || colors.info;
+                
+                document.body.appendChild(toast);
+                
+                // Animate in
+                setTimeout(() => {
+                    toast.style.opacity = '1';
+                    toast.style.transform = 'translateY(0)';
+                }, 100);
+                
+                // Remove after 3 seconds
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        document.body.removeChild(toast);
+                    }, 300);
+                }, 3000);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the app
+        const app = new NotesApp();
+    </script>
+</body>
+</html>
